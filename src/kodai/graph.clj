@@ -40,9 +40,16 @@
              (assoc out entry adjacent)
              adjacent))))
 
+(defn dependency-network
+  [graph entries]
+  (reduce (fn [out entry]
+            (dependency-tree graph entry out))
+          {}
+          entries))
+
 (comment
   (file-meta-map (.getPath (first (keys (:filemap trk)))) 'kodai.graph)
-  
+
   (group-by-namespace (keys (project-graph ["src"])))
 
 
@@ -51,16 +58,16 @@
 
 
   (defn- helo "oeuoe" {:ahh "oeue"} [] 2)
-  
+
   (def bundle (project-info ["src"]))
   (def bundle (project-info ["example"]))
 
   (dependency-tree (-> bundle :calls :reverse) 'example.core/long?)
-  
+
 
   (-> bundle :calls :meta)
   (type (project-info ["src"]))
-  
+
   (map count (map clojure.string/split-lines
                   (query/$ (.getPath (ffirst (:clojure.tools.namespace.file/filemap trk)))
                            [(defn _ ^:%?- string? ^:%?- map? ^:% vector? & _ )] {:return :string :walk :top})))
@@ -68,7 +75,7 @@
   (./source var) (var helo)
 
   (meta (resolve 'helo))
-  
+
   (defn a
     []
     (b 1))
@@ -79,8 +86,4 @@
 
   (defn c []
     (a (b 1))))
-;; 
-
-
-
-
+;;
