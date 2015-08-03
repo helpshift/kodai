@@ -1,6 +1,6 @@
 # kodai
 
-A Clojure library designed to ... well, that part is up to you.
+Statistical analysis for your code
 
 ## Usage
 
