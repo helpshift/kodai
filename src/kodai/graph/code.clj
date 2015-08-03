@@ -44,6 +44,3 @@
                             meta)))
              bundle
              filemap))
-
-
-(merge-with merge {:a {:a 1}} {:a {:b 1}})
