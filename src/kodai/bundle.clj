@@ -47,6 +47,26 @@
           #{}
           vars))
 
+(defn drop-vars [vars namespaces]
+  (reduce (fn [out var]
+            (if (namespace? var namespaces)
+              (conj out (symbol (.getNamespace var)))
+              (conj out var)))
+          #{}
+          vars))
+
+(defn collapse-namespaces
+  [nodes namespaces]
+  (reduce-kv (fn [out k v]
+               (let [v (drop-vars v namespaces)]
+                 (if (namespace? k namespaces)
+                   (do (println v k)
+                       (update-in out [(symbol (.getNamespace k))] (fnil #(set/union v %) #{})))
+                   (assoc out k v))))
+             {}
+             nodes))
+
+
 (defn bundle [regexs]
   (let [regexs (if (vector? regexs) regexs [regexs])
         vars (-> (apply analyser/classpath-ns-forms regexs)
