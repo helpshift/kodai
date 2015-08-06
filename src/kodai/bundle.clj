@@ -60,12 +60,10 @@
   (reduce-kv (fn [out k v]
                (let [v (drop-vars v namespaces)]
                  (if (namespace? k namespaces)
-                   (do (println v k)
-                       (update-in out [(symbol (.getNamespace k))] (fnil #(set/union v %) #{})))
+                   (update-in out [(symbol (.getNamespace k))] (fnil #(set/union v %) #{}))
                    (assoc out k v))))
              {}
              nodes))
-
 
 (defn bundle [regexs]
   (let [regexs (if (vector? regexs) regexs [regexs])

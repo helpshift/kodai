@@ -57,13 +57,7 @@
 
 
 
-(visualize {:forward (bundle/collapse-namespaces (:forward bundle) '#{gulfstream.graph.css
-                                                                      gulfstream.graph.dom
-                                                                      gulfstream.simulation.gen
-                                                                      gulfstream.data.interop
-                                                                      gulfstream.graph
-                                                                      ;;gulfstream.core
-                                                                      })})
+
 
 
 
@@ -74,9 +68,18 @@
 
 (comment
 
+  (visualize {:forward (bundle/collapse-namespaces (:forward bundle) '#{gulfstream.graph.css
+                                                                      gulfstream.graph.dom
+                                                                      gulfstream.simulation.gen
+                                                                      gulfstream.data.interop
+                                                                      gulfstream.graph
+                                                                      ;;gulfstream.core
+                                                                      })})
+
   
   (ui/native!)
-  (def view (ui/to-widget (graph-ui bundle)))
+  (def view (graph-ui bundle))
+  (def view *1)
   (.* view #"setSize")
 
   (def f (JFrame. "Hello"))
@@ -99,11 +102,12 @@
 
   (-> f ui/pack! ui/show!)
   (-> f ui/show!)
-  (visualize bundle)
+  (def viewer (visualize bundle))
 
+  (.* viewer :name #"get")
+  (.* (.getDefaultView viewer) :name #"^is")
+  (.isShowing (.getDefaultView viewer))
   (:forward bundle))
-
-
 
 
 
