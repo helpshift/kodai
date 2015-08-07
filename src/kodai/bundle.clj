@@ -1,30 +1,13 @@
 (ns kodai.bundle
   (:require [sniper.snarf :as analyser]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [hara.data.nested :as nested]
+            [kodai.util :as util]))
 
-(defrecord Bundle []
-  Object
-  (toString [obj]
-    (str "#bundle" (vec (keys obj)))))
+(defrecord Bundle [])
 
 (defmethod print-method Bundle [v w]
-  (.write w (str v)))
-
-(defn reverse-graph [graph]
-  (let [rev (reduce-kv
-             (fn [out k vs]
-               (reduce (fn [out v]
-                         (update-in out [v] (fnil #(conj % k) #{})))
-                       out
-                       vs))
-             {} graph)
-        ks  (set (keys graph))
-        rks (set (keys rev))
-        eks (set/difference ks rks)]
-    (reduce (fn [out k]
-              (assoc out k #{}))
-            rev
-            eks)))
+  (.write w (str "#bundle" (vec (keys v)))))
 
 (defn pack [forms]
   (->> forms
@@ -36,34 +19,12 @@
        (map (juxt :id identity))
        (into {})))
 
-(defn namespace? [var namespaces]
-  (get namespaces (symbol (.getNamespace var))))
-
-(defn keep-vars [vars namespaces]
-  (reduce (fn [out var]
-            (if (namespace? var namespaces)
-              (conj out var)
-              out))
-          #{}
-          vars))
-
-(defn drop-vars [vars namespaces]
-  (reduce (fn [out var]
-            (if (namespace? var namespaces)
-              (conj out (symbol (.getNamespace var)))
-              (conj out var)))
-          #{}
-          vars))
-
-(defn collapse-namespaces
-  [nodes namespaces]
-  (reduce-kv (fn [out k v]
-               (let [v (drop-vars v namespaces)]
-                 (if (namespace? k namespaces)
-                   (update-in out [(symbol (.getNamespace k))] (fnil #(set/union v %) #{}))
-                   (assoc out k v))))
-             {}
-             nodes))
+(defn keywordize-entries [bundle]
+  (let [all-fn (comp util/keywordize-keys util/keywordize-links)]
+    (-> bundle
+        (update-in [:forward] all-fn)
+        (update-in [:reverse] all-fn)
+        (update-in [:meta] util/keywordize-keys))))
 
 (defn bundle [regexs]
   (let [regexs (if (vector? regexs) regexs [regexs])
@@ -71,8 +32,8 @@
                  pack)
         namespaces (set (map :ns (vals vars)))
         meta (reduce-kv (fn [out k v]
-                          (if (namespace? k namespaces)
-                            (update-in out [k :calls] keep-vars namespaces)
+                          (if (util/namespace? k namespaces)
+                            (update-in out [k :calls] util/keep-vars namespaces)
                             (dissoc out k)))
                         vars
                         vars)
@@ -80,17 +41,17 @@
                              (assoc out k (:calls v)))
                            {}
                            meta)
-        reverse (reverse-graph forward)]
-    (map->Bundle {:forward forward
-                  :reverse reverse
-                  :meta meta})))
+        reverse (util/reverse-graph forward)
+        bundle  (map->Bundle {:forward forward
+                              :reverse reverse
+                              :meta meta})]
+    (keywordize-entries bundle)))
 
 (comment
   (def vs (analyser/classpath-ns-forms #"src/gulfstream"))
   
   
-
-  (bundle #"src/gulfstream")
+  (first (:forward (keywordize-bundle (bundle #"src/gulfstream"))))
   
   (.getNamespace 'hoeu.oeu/oeu)
 
