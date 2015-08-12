@@ -41,9 +41,12 @@
              elements
              links))
 
-(defn provision-dom [bundle modifiers]
-  (let [links   (get bundle (-> modifiers :data :type))]
+(defn provision-dom [elements modifiers]
+  (let [links   (get elements (-> modifiers :data :type))]
     (-> (zipmap (keys links) (repeat {}))
         (dom-add-label modifiers)
         (dom-select-node modifiers)
         (dom-create-links links))))
+
+(defn provision-elements [bundle modifiers]
+  bundle)
