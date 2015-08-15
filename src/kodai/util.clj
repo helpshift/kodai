@@ -79,16 +79,6 @@
            #{}
            vars)))
 
-(defn collapse-namespaces
-  [nodes namespaces]
-  (reduce-kv (fn [out k v]
-               (let [v (drop-vars v namespaces)]
-                 (if (namespace? k namespaces)
-                   (update-in out [(symbol (.getNamespace k))] (fnil #(set/union v %) #{}))
-                   (assoc out k v))))
-             {}
-             nodes))
-
 (defn keywordize-keys
   "modifies the keys of a map to be a keyword
  
@@ -106,4 +96,3 @@
   {:added "0.1"}
   [m]
   (nested/update-vals-in m [] (fn [v] (set (map keyword v)))))
-

@@ -1,8 +1,8 @@
-(ns kodai.core.provision-test
+(ns kodai.core.format-test
   (:use midje.sweet)
-  (:require [kodai.core.provision :refer :all]))
+  (:require [kodai.core.format :refer :all]))
 
-^{:refer kodai.core.provision/format-label :added "0.1"}
+^{:refer kodai.core.format/format-label :added "0.1"}
 (fact "formats label of according to specification"
   (format-label 'x.y/z {:label {:type :full}})
   => "x.y/z"
