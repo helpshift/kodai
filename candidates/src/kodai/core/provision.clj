@@ -27,9 +27,13 @@
              {}
              elements))
 
-(defn dom-select-node [elements modifiers]
+(defn dom-select-node [elements bundle modifiers]
   (if-let [selected (-> modifiers :ui :selected)]
-    (assoc-in elements [selected :ui.class] "selected")
+    (let [adjacents (-> bundle :forward selected)]
+      (reduce (fn [elements k]
+                (assoc-in elements [k :ui.class] "adjacent"))
+              (assoc-in elements [selected :ui.class] "selected")
+              adjacents))
     elements))
 
 (defn dom-create-links [elements links]
@@ -41,11 +45,11 @@
              elements
              links))
 
-(defn provision-dom [elements modifiers]
+(defn provision-dom [elements bundle modifiers]
   (let [links   (get elements (-> modifiers :data :type))]
     (-> (zipmap (keys links) (repeat {}))
         (dom-add-label modifiers)
-        (dom-select-node modifiers)
+        (dom-select-node bundle modifiers)
         (dom-create-links links))))
 
 (defn provision-elements [bundle modifiers]
