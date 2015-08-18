@@ -27,9 +27,9 @@
    with graphstream
  
    (keywordize-entries {:forward {\"a\" #{\"b\" \"c\"}}
-                        :meta {\"a\" {\"b\" \"c\"}}})
+                        :meta {\"a\" {:id \"hello\" :ns 'clojure.core}}})
    => {:reverse {},
-       :meta {:a {\"b\" \"c\"}},
+       :meta {:a {:ns \"clojure.core\", :id :hello}},
        :forward {:a #{:c :b}}}"
   {:added "0.1"}
   [bundle]
@@ -40,8 +40,8 @@
                       (update-in [:ns] name)
                       (dissoc :file :calls)))]
     (-> bundle
-        (update-in [:forward] all-fn)
-        (update-in [:reverse] all-fn)
+        (update-in [:forward] (fnil all-fn {}))
+        (update-in [:reverse] (fnil all-fn {}))
         (update-in [:meta] #(-> %
                                 util/keywordize-keys
                                 (nested/update-vals-in [] elem-fn))))))

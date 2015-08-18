@@ -10,9 +10,9 @@
   with graphstream"
 
   (keywordize-entries {:forward {"a" #{"b" "c"}}
-                       :meta {"a" {"b" "c"}}})
+                       :meta {"a" {:id "hello" :ns 'clojure.core}}})
   => {:reverse {},
-      :meta {:a {"b" "c"}},
+      :meta {:a {:ns "clojure.core", :id :hello}},
       :forward {:a #{:c :b}}})
 
 ^{:refer kodai.bundle/bundle :added "0.1"}

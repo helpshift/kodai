@@ -17,7 +17,7 @@
   {:added "0.1"}
   [var {:keys [label] :as modifiers}]
   (case (:type label)
-    :full var
+    :full (str var)
     :name (name var)
     :initials (str (->> (string/split (.getNamespace var) #"\.")
                         (map first)
