@@ -69,14 +69,12 @@
 ^{:refer kodai.core.pipeline/pipe :added "0.1"}
 (fact "a pipeline for manipulation of elements based upon specific options:"
   
-  {:reverse-calls     false  ;
+  {:reverse-calls     false  ; reverses call
    :hide-dynamic      true   ; 
    :hide-namespaces   #{}    ;
-   :hide-singletons   true
-   :hide-vars         #{}
-   :select-namespaces #{}
-   :select-vars       #{}
-   :collapse-vars     #{}}
-
-  
-  )
+   :hide-singletons   true   ;
+   :hide-vars         #{}    ;
+   :select-namespaces #{}    ;
+   :select-vars       #{}    ;
+   :collapse-vars     #{}    ;
+   })
