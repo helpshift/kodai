@@ -25,6 +25,12 @@
   (namespace? 'example.core/hello '#{example.core})
   => true)
 
+^{:refer kodai.util/keep-vars :added "0.1"}
+(fact "keeps the vars that are in the set of namespace"
+  
+  (keep-vars '#{x.y/a x.z/b} '#{x.y})
+   => '#{x.y/a})
+
 ^{:refer kodai.util/keywordize-keys :added "0.1"}
 (fact "modifies the keys of a map to be a keyword"
 

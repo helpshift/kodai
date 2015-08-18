@@ -133,18 +133,6 @@
   )
 
 (defn call-pipe
-  "a pipeline for manipulation of elements based upon specific options:
-   
-   {:reverse-calls     false  ;
-    :hide-dynamic      true   ; 
-    :hide-namespaces   #{}    ;
-    :hide-singletons   true
-    :hide-vars         #{}
-    :select-namespaces #{}
-    :select-vars       #{}
-    :collapse-vars     #{}}
-   "
-  {:added "0.1"}
   [bundle opts]
   (let [;; reverse-calls
         calls (if (:reverse-calls opts)
