@@ -103,6 +103,16 @@
                                 #(if (% focused)
                                    (disj % focused)
                                    (conj % focused))))
+
+                       (= k :h)
+                       (if (get (:chords @interaction) :control)
+                         (swap! options update-in [:bundle :hide-vars] (fnil empty #{}))
+                         (when-let [focused (-> interaction deref :focused)]
+                           (swap! interaction dissoc :focused)
+                           (swap! options update-in [:bundle :hide-vars]
+                                  #(if (% focused)
+                                     (disj % focused)
+                                     (conj % focused)))))
                        
                        (#{:shift :control :meta :alt} k)
                        (swap! interaction update-in [:chords] (fnil #(conj % k) #{})))))

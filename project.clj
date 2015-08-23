@@ -7,6 +7,7 @@
                  [w01fe/sniper "0.1.0"]
                  [seesaw "1.4.5"]
                  [helpshift/gulfstream "0.1.8"]
+                 [im.chit/hara.concurrent.latch "2.2.7"]
                  ;;[im.chit/hara "2.2.7"]
                  ]
   :source-paths ["src" "example"]
