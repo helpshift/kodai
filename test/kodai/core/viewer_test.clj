@@ -1,1 +1,1 @@
-(ns kodai.core.browser-test)
+(ns kodai.core.viewer-test)

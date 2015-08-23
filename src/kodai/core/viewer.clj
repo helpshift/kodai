@@ -65,7 +65,7 @@
          interaction-cell (atom {})
          listeners    (create-listeners interaction-cell)
          viewer       (gs/browse (assoc app :dom {} :listeners listeners))
-         dom-cell     (get bw :dom)]
+         dom-cell     (get viewer :dom)]
      (latch/latch options-cell calls-cell
                   #(pipe/call-pipe bundle %))
      (latch/latch calls-cell metas-cell
@@ -113,6 +113,4 @@
             :edges {[:a :b] {:label "b->c"}}})
 
   (bw :dom {:nodes {}
-            :edges {[:a :b] {:label "a->b"}}})
-  
-  )
+            :edges {[:a :b] {:label "a->b"}}}))
