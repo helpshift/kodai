@@ -1,6 +1,7 @@
 (ns kodai.core.pipeline-test
   (:use midje.sweet)
   (:require [kodai.core.pipeline :refer :all]
+            [kodai.core.viewer :as viewer]
             [kodai.bundle :as bundle]))
 
 ^{:refer kodai.core.pipeline/remove-vars :added "0.1"}
@@ -65,18 +66,58 @@
                         #{:c :b})
   => #{:a})
 
- ^{:refer kodai.core.pipeline/meta-pipe :added "0.1"}
- (fact "updates pipeline meta")
-
 ^{:refer kodai.core.pipeline/call-pipe :added "0.1"}
 (fact "a pipeline for manipulation of elements based upon specific options:"
 
-  {:reverse-calls     false  ; reverses call
-   :hide-dynamic      true   ;
-   :hide-namespaces   #{}    ;
-   :hide-singletons   true   ;
-   :hide-vars         #{}    ;
-   :select-namespaces #{}    ;
-   :select-vars       #{}    ;
-   :collapse-vars     #{}    ;
-   })
+  (-> (bundle/bundle #"example")
+      (call-pipe {:bundle {:reverse-calls     false
+                           :hide-dynamic      false
+                           :hide-namespaces   #{}
+                           :hide-singletons   false
+                           :hide-vars         #{}
+                           :select-namespaces #{}
+                           :select-vars       #{}
+                           :collapse-vars     #{}}}))  
+  => {:example.core/keywordize #{:example.core/hash-map? :example.core/long?},
+      :example.core/long? #{},
+      :example.core/hash-map? #{}})
+
+^{:refer kodai.core.pipeline/css-string :added "0.1"}
+(fact "creates a css-string from a clojure one"
+
+  (css-string "clojure.core/add")
+  => "clojure_core__add")
+
+ ^{:refer kodai.core.pipeline/elements-pipe :added "0.1"}
+(fact "creates elements from a call graph for display as dom elements"
+
+  (-> (bundle/bundle #"example")
+      (call-pipe viewer/+default-options+)
+      (elements-pipe viewer/+default-options+))
+  => {:nodes {:example.core/keywordize
+              {:full :example.core/keywordize,
+               :label "c/keywordize",
+               :namespace "example.core",
+               :ui.class ["ns_example_core"]},
+              :example.core/long?
+              {:full :example.core/long?,
+               :label "c/long?",
+               :namespace "example.core",
+               :ui.class ["ns_example_core"]},
+              :example.core/hash-map?
+              {:full :example.core/hash-map?,
+               :label "c/hash-map?",
+               :namespace "example.core",
+               :ui.class ["ns_example_core"]}},
+      :edges {[:example.core/keywordize :example.core/hash-map?]
+              {:from :example.core/keywordize,
+               :to :example.core/hash-map?,
+               :from-ns "example.core",
+               :to-ns "example.core",
+               :ui.class ["to_example_core" "from_example_core"]},
+              [:example.core/keywordize :example.core/long?]
+              {:from :example.core/keywordize,
+               :to :example.core/long?,
+               :from-ns "example.core",
+               :to-ns "example.core",
+               :ui.class ["to_example_core" "from_example_core"]}}})

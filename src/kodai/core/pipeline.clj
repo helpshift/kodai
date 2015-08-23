@@ -1,5 +1,6 @@
 (ns kodai.core.pipeline
-  (:require [clojure.set :as set]))
+  (:require [clojure.set :as set]
+            [kodai.core.format :as format]))
 
 (defn remove-vars
   "removes all references of var from call graph
@@ -92,10 +93,8 @@
                                   (conj out k)
                                   out))
                               #{} calls)]
-    (reduce-kv (fn [out k v]
-                 (set/difference potentials v))
-               potentials
-               calls)))
+    (set/difference potentials
+                    (apply set/union (vals calls)))))
 
 (defn find-dynamic
   "returns a set of all dynamic vars within a call graph
@@ -128,25 +127,23 @@
           #{}
           vars))
 
-(defn meta-pipe
-  "updates pipeline meta"
-  {:added "0.1"}
-  [calls meta opts])
-
 (defn call-pipe
   "a pipeline for manipulation of elements based upon specific options:
 
-   {:reverse-calls     false  ; reverses call
-    :hide-dynamic      true   ;
-    :hide-namespaces   #{}    ;
-    :hide-singletons   true   ;
-    :hide-vars         #{}    ;
-    :select-namespaces #{}    ;
-    :select-vars       #{}    ;
-    :collapse-vars     #{}    ;
-    }"
+   (-> (bundle/bundle #\"example\")
+       (call-pipe {:bundle {:reverse-calls     false
+                            :hide-dynamic      false
+                            :hide-namespaces   #{}
+                            :hide-singletons   false
+                            :hide-vars         #{}
+                            :select-namespaces #{}
+                           :select-vars       #{}
+                            :collapse-vars     #{}}}))
+   => {:example.core/keywordize #{:example.core/hash-map? :example.core/long?},
+       :example.core/long? #{},
+       :example.core/hash-map? #{}}"
   {:added "0.1"}
-  [bundle opts]
+  [bundle {opts :bundle}]
   (let [;; reverse-calls
         calls (if (:reverse-calls opts)
                 (:reverse bundle)
@@ -198,3 +195,79 @@
                      (remove-vars calls))
                 calls)]
     calls))
+
+(defn css-string
+  "creates a css-string from a clojure one
+
+   (css-string \"clojure.core/add\")
+   => \"clojure_core__add\""
+  {:added "0.1"}
+  [s]
+  (-> s
+      (.replaceAll "\\." "_")
+      (.replaceAll "/" "__")))
+
+(defn elements-pipe
+  "creates elements from a call graph for display as dom elements
+
+   (-> (bundle/bundle #\"example\")
+       (call-pipe viewer/+default-options+)
+       (elements-pipe viewer/+default-options+))
+   => {:nodes {:example.core/keywordize
+               {:full :example.core/keywordize,
+                :label \"c/keywordize\",
+               :namespace \"example.core\",
+                :ui.class [\"ns_example_core\"]},
+               :example.core/long?
+               {:full :example.core/long?,
+                :label \"c/long?\",
+                :namespace \"example.core\",
+                :ui.class [\"ns_example_core\"]},
+               :example.core/hash-map?
+               {:full :example.core/hash-map?,
+                :label \"c/hash-map?\",
+                :namespace \"example.core\",
+                :ui.class [\"ns_example_core\"]}},
+       :edges {[:example.core/keywordize :example.core/hash-map?]
+               {:from :example.core/keywordize,
+                :to :example.core/hash-map?,
+                :from-ns \"example.core\",
+                :to-ns \"example.core\",
+                :ui.class [\"to_example_core\" \"from_example_core\"]},
+               [:example.core/keywordize :example.core/long?]
+               {:from :example.core/keywordize,
+                :to :example.core/long?,
+                :from-ns \"example.core\",
+                :to-ns \"example.core\",
+                :ui.class [\"to_example_core\" \"from_example_core\"]}}}"
+  {:added "0.1"}
+  [calls opts]
+  (let [collapsed (-> opts :bundle :collapse-vars)
+        selected  (-> opts :bundle :select-vars)
+        v-fn  #(vec (filter identity %))
+        nodes (->> (keys calls)
+                   (map (juxt identity (fn [v] (let [ns (.getNamespace v)]
+                                                 {:full v
+                                                  :label (format/format-label v (:format opts))
+                                                  :namespace ns
+                                                  :ui.class
+                                                  (v-fn [(str "ns_" (css-string ns))
+                                                         (if (collapsed v) "collapsed")
+                                                         (if (selected v) "selected")])}))))
+                   (into {}))
+        edges (->> (seq calls)
+                   (mapcat (fn [[from tos]]
+                             (map (fn [to]
+                                    [[from to]
+                                     (let [from-ns (get-in nodes [from :namespace])
+                                           to-ns   (get-in nodes [to :namespace])]
+                                       {:from from
+                                        :to to
+                                        :from-ns from-ns
+                                        :to-ns to-ns
+                                        :ui.class [(str "to_"   (css-string to-ns))
+                                                   (str "from_" (css-string from-ns))]})])
+                                  tos)))
+                   (into {}))]
+    {:nodes nodes
+     :edges edges}))
