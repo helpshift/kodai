@@ -5,7 +5,7 @@
 
 ^{:refer kodai.core.pipeline/remove-vars :added "0.1"}
 (fact "removes all references of var from call graph"
-  
+
   (remove-vars {:a #{:b}
                 :b #{:a}
                 :c #{:a :b}} #{:a})
@@ -13,7 +13,7 @@
 
 ^{:refer kodai.core.pipeline/pick-vars :added "0.1"}
 (fact "picks only those references from the call graph"
-  
+
   (pick-vars {:a #{:b}
               :b #{:a}
               :c #{:a :b}} #{:a :b})
@@ -21,7 +21,7 @@
 
 ^{:refer kodai.core.pipeline/find-adjacent :added "0.1"}
 (fact "returns a set of all functions adjacent to var"
-  
+
   (find-adjacent {:a #{:b :c} :b #{}}
                  :a)
   => #{:c :b})
@@ -44,7 +44,7 @@
 
 ^{:refer kodai.core.pipeline/find-singletons :added "0.1"}
 (fact "returns a set a isolated nodes"
-  
+
   (find-singletons {:a #{}
                     :b #{}
                     :c #{:a}})
@@ -65,12 +65,14 @@
                         #{:c :b})
   => #{:a})
 
+ ^{:refer kodai.core.pipeline/meta-pipe :added "0.1"}
+ (fact "updates pipeline meta")
 
-^{:refer kodai.core.pipeline/pipe :added "0.1"}
+^{:refer kodai.core.pipeline/call-pipe :added "0.1"}
 (fact "a pipeline for manipulation of elements based upon specific options:"
-  
+
   {:reverse-calls     false  ; reverses call
-   :hide-dynamic      true   ; 
+   :hide-dynamic      true   ;
    :hide-namespaces   #{}    ;
    :hide-singletons   true   ;
    :hide-vars         #{}    ;

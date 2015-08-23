@@ -4,16 +4,16 @@
 (defn format-label
   "formats label of according to specification
    (format-label 'x.y/z {:label {:type :full}})
-   => x.y/z
+   => \"x.y/z\"
  
    (format-label 'x.y/hello {:label {:type :name}})
-   => hello
+   => \"hello\"
  
    (format-label 'x.y.z/hello {:label {:type :partial}})
-   => y.z/hello
+   => \"y.z/hello\"
  
    (format-label 'x.y.z/hello {:label {:type :partial :skip 2}})
-   => z/hello"
+   => \"z/hello\""
   {:added "0.1"}
   [var {:keys [label] :as modifiers}]
   (case (:type label)

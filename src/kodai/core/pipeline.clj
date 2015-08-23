@@ -3,7 +3,7 @@
 
 (defn remove-vars
   "removes all references of var from call graph
-   
+
    (remove-vars {:a #{:b}
                  :b #{:a}
                  :c #{:a :b}} #{:a})
@@ -19,7 +19,7 @@
 
 (defn pick-vars
   "picks only those references from the call graph
-   
+
    (pick-vars {:a #{:b}
                :b #{:a}
                :c #{:a :b}} #{:a :b})
@@ -35,7 +35,7 @@
 
 (defn find-adjacent
   "returns a set of all functions adjacent to var
-   
+
    (find-adjacent {:a #{:b :c} :b #{}}
                   :a)
    => #{:c :b}"
@@ -45,7 +45,7 @@
 
 (defn find-downstream
   "helper function for find-upstream and find-downstream
- 
+
    (find-downstream {:a #{:b :c} :b #{} :c #{:d} :d #{}}
                     :a)
    => #{:c :b}"
@@ -63,7 +63,7 @@
 
 (defn find-namespace-vars
   "returns vars that are in a particular namespace
- 
+
    (find-namespace-vars {:x/b #{}
                          :y/c #{}
                          :z/a #{}}
@@ -80,7 +80,7 @@
 
 (defn find-singletons
   "returns a set a isolated nodes
-   
+
    (find-singletons {:a #{}
                      :b #{}
                      :c #{:a}})
@@ -99,7 +99,7 @@
 
 (defn find-dynamic
   "returns a set of all dynamic vars within a call graph
- 
+
    (find-dynamic {:*hello* #{}})
    => #{:*hello*}"
   {:added "0.1"}
@@ -115,7 +115,7 @@
 
 (defn find-downstream-vars
   "returns a set of all dynamic vars within a call graph
- 
+
    (find-downstream-vars {:a #{}
                           :b #{}
                           :c #{:a}}
@@ -129,10 +129,23 @@
           vars))
 
 (defn meta-pipe
-  [calls meta opts]
-  )
+  "updates pipeline meta"
+  {:added "0.1"}
+  [calls meta opts])
 
 (defn call-pipe
+  "a pipeline for manipulation of elements based upon specific options:
+
+   {:reverse-calls     false  ; reverses call
+    :hide-dynamic      true   ;
+    :hide-namespaces   #{}    ;
+    :hide-singletons   true   ;
+    :hide-vars         #{}    ;
+    :select-namespaces #{}    ;
+    :select-vars       #{}    ;
+    :collapse-vars     #{}    ;
+    }"
+  {:added "0.1"}
   [bundle opts]
   (let [;; reverse-calls
         calls (if (:reverse-calls opts)

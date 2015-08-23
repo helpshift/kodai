@@ -86,7 +86,7 @@
                         vars
                         vars)
         forward (reduce-kv (fn [out k v]
-                             (assoc out k (:calls v)))
+                             (assoc out k (disj (:calls v) k)))
                            {}
                            meta)
         reverse (util/reverse-graph forward)
