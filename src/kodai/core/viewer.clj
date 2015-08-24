@@ -29,7 +29,8 @@
    [:node.selected        {:stroke-width "5"
                            :stroke-color "black"
                            :stroke-mode "plain"}]
-   [:node.collapsed       {:fill-color "orange"}]
+   [:node.collapsed       {:fill-color "orange"
+                           :text-mode "normal"}]
    [:node.highlighted     {:text-mode "normal"}]
    [:node.focused_node    {:fill-color "green"
                            :text-mode "normal"
@@ -39,8 +40,9 @@
                            :z-index "100"}]
    [:node.adjacent_node   {:fill-color "blue"
                            :size "10px"
-                           :text-size "10px"
-                           :text-color "black"
+                           :text-size "12px"
+                           :text-mode "normal"
+                           :text-color "blue"
                            :z-index "100"}]
    [:node.downstream_node {:fill-color "red"}]
    [:edge.adjacent_edge   {:fill-color "blue"
@@ -48,21 +50,7 @@
    [:edge                 {:fill-color "grey"}]
    [:edge.downstream_edge {}]])
 
-(comment
-  (def vw (viewer {:bundle bd} {}))
-  (vw :style +default-style+)
-
-
-  (-> (vw :dom)
-      (add-class :nodes :kodai.bundle/->Bundle "focused_node")
-      (manipulate (-> (:bundle vw) :forward) pipe/find-adjacent add-class :nodes :kodai.bundle/->Bundle  "adjacent_node")
-      
-      )
-  )
-
-
 (object/extend-maplike
- 
  gulfstream.core.Browser
  {:tag "browser"
   :default false
@@ -96,10 +84,21 @@
    KeyEvent/VK_S       :s
    KeyEvent/VK_V       :v})
 
+(defn toggle-focused
+  ([interaction options k]
+   (toggle-focused interaction options k identity))
+  ([interaction options k f]
+   (if-let [focused (-> interaction deref :focused)]
+     (swap! options update-in [:bundle k]
+            #(if (% focused)
+               (disj % focused)
+               (conj (f %) focused))))))
+
 (defn create-listeners [interaction options]
   {:node
    {:on-push (fn [id]
-               (swap! interaction assoc :focused (keyword id)))}
+               (if (get (:chords @interaction) :meta)
+                 (swap! interaction assoc :focused (keyword id))))}
    :keyboard
    {:on-push (fn [e]
                (let [k (keyboard (.getKeyCode e))]
@@ -116,36 +115,20 @@
                        (swap! options update-in [:bundle :hide-dynamic] not)
 
                        (= k :v)
-                       (if-let [focused (-> interaction deref :focused)]
-                         (swap! options update-in [:bundle :select-vars]
-                                #(if (% focused)
-                                   (disj % focused)
-                                   (conj (empty %) focused))))
+                       (toggle-focused interaction options :select-vars empty)
 
                        (= k :c)
-                       (if-let [focused (-> interaction deref :focused)]
-                         (swap! options update-in [:bundle :collapse-vars]
-                                #(if (% focused)
-                                   (disj % focused)
-                                   (conj % focused))))
+                       (toggle-focused interaction options :collapse-vars)                       
 
                        (= k :l)
-                       (if-let [focused (-> interaction deref :focused)]
-                         (swap! options update-in [:bundle :highlight-vars]
-                                #(if (% focused)
-                                   (disj % focused)
-                                   (conj % focused))))
-
+                       (toggle-focused interaction options :highlight-vars)
                        
                        (= k :h)
                        (if (get (:chords @interaction) :control)
                          (swap! options update-in [:bundle :hide-vars] (fnil empty #{}))
                          (when-let [focused (-> interaction deref :focused)]
-                           (swap! interaction dissoc :focused)
-                           (swap! options update-in [:bundle :hide-vars]
-                                  #(if (% focused)
-                                     (disj % focused)
-                                     (conj % focused)))))
+                           (toggle-focused interaction options :hide-vars)
+                           (swap! interaction dissoc :focused)))
                        
                        (= k :n)
                        (if (get (:chords @interaction) :control)
@@ -165,10 +148,22 @@
                     (cond (#{:shift :control :meta :alt} k)
                           (swap! interaction update-in [:chords] disj k))))}})
 
-(defn add-class [dom type id cls]
+(defn add-class
+  "adds a :ui.class to a dom
+   (add-class {:nodes {:a {}}}
+              :nodes :a \"hello\")
+   => {:nodes {:a {:ui.class [\"hello\"]}}}"
+  {:added "0.1"}
+  [dom type id cls]
   (update-in dom [type id :ui.class] (fnil #(conj % cls) [])))
 
-(defn remove-class [dom type id cls]
+(defn remove-class
+  "adds a :ui.class to a dom
+   (remove-class {:nodes {:a {:ui.class [\"hello\" \"world\"]}}}
+                 :nodes :a \"hello\")
+   => {:nodes {:a {:ui.class [\"world\"]}}}"
+  {:added "0.1"}
+  [dom type id cls]
   (update-in dom [type id]
              (fn [m]
                (let [arr (:ui.class m)
@@ -200,16 +195,13 @@
               (-> dom
                   (remove-class :nodes var "focused_node")
                   (manipulate calls pipe/find-adjacent remove-class :nodes var "adjacent_node")
-                  (manipulate calls pipe/find-downstream remove-class :nodes var "downstream_node")
-                  )
+                  (manipulate calls pipe/find-downstream remove-class :nodes var "downstream_node"))
               dom)]
     dom))
 
-
-(comment
-  )
-
 (defn viewer
+  "creates a viewer for the bundle"
+  {:added "0.1"}
   ([app]
    (viewer app {}))
   ([{:keys [bundle] :as app} options]
@@ -219,7 +211,10 @@
          elements-cell   (atom {})
          interaction-cell (atom {})
          listeners    (create-listeners interaction-cell options-cell)
-         viewer       (gs/browse (assoc app :dom {:nodes {} :edges {}} :style +default-style+ :listeners listeners))
+         viewer       (gs/browse (assoc app
+                                        :dom {:nodes {} :edges {}}
+                                        :style +default-style+
+                                        :listeners listeners))
          dom-cell     (get viewer :dom)]
      (latch/latch options-cell calls-cell
                   #(pipe/call-pipe bundle %))
@@ -240,106 +235,3 @@
                 :calls calls-cell
                 :elements elements-cell
                 :interaction interaction-cell)))))
-
-(comment
-  (require '[kodai.bundle :as bundle])
-  (require '[kodai.core.pipeline :as pipe])
-
-  (def bd (bundle/bundle #"src/kodai"))
-
-  (def vw (viewer {:bundle bd} {}))
-  
-
-  (pipe/find-namespace-vars (:forward bd) #{"kodai.core.viewer"})
-  (pipe/find-downstream-vars (:forward bd) #{:kodai.core.pipeline/call-pipe})
-  
-  (:options vw)
-  
-
-
-
-  
-
-
-
-
-
-
-  
-  
-  (count (pipe/call-pipe bd {:bundle {:hide-singletons true}}))
-  (count (pipe/call-pipe bd {}))
-  
-  
-  (gs/browse
-   {:dom (-> (pipe/elements-pipe
-              (pipe/call-pipe bd {:bundle {:reverse-calls false
-                                           :hide-singletons true}})
-              {:format {:label :initials}}))
-    :style +default-style+
-    })
-
-  (clojure.set/intersection (pipe/find-singletons (:forward bd))
-                            (pipe/find-singletons (:reverse bd)))
-  
-  
-  
-  (comment
-    h   - hide var
-    C-h - clear hidden vars
-    H   - hide namespace
-    C-H - clear hidden namespaces
-    s - select/unselect var 
-    S - select/unselect namespace
-    c - collapse/uncollapse var
-    d - toggle dynamic vars
-    r - toggle call-reverse
-    i - toggle singleton vars)
-  
-  
-  
-  (count (-> bd :reverse keys))
-
-  (clojure.set/difference #{1 2} #{1 3})
-  
-  
-  (vw :interaction)
-  (vw :options)
-  
-  (-> (vw :dom)
-      :nodes
-      :kodai.core.viewer/viewer)
-  
-  (:elements )
-  
-   (pipe/metas-pipe (pipe/call-pipe bd {:bundle {:reverse-calls false
-                                                 :hide-namespaces #{"kodai.util"}
-                                                 ;;:select-vars #{:kodai.util/keep-vars}
-                                                 :hide-singletons true}})
-
-
-                    {:format {:label :partial}
-                     :bundle {:reverse-calls false
-                              :hide-namespaces #{"kodai.util"}
-                              ;;:select-vars #{:kodai.util/keep-vars}
-                              :hide-singletons true}})
-   
-   
-  
-
-  
-  (def bw (gs/browse {:dom {:nodes {:a {}
-                                    :b {}}
-                            :edges {[:a :b] {}}}
-                      :title "Hello World"}))
-  (get bw :dom)
-  (keys bw)
-  
-  (:graph :dom :viewer)
-  
-  (bw :dom {:nodes {:a {:label "a"}
-                    :b {:label "b"}}
-            :edges {[:a :b] {:label "b->c"}}})
-
-  (bw :dom {:nodes {}
-            :edges {[:a :b] {:label "a->b"}}}))

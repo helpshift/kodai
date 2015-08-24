@@ -4,7 +4,7 @@
 
 (defn remove-vars
   "removes all references of var from call graph
-
+ 
    (remove-vars {:a #{:b}
                  :b #{:a}
                  :c #{:a :b}} #{:a})
@@ -20,7 +20,7 @@
 
 (defn pick-vars
   "picks only those references from the call graph
-
+ 
    (pick-vars {:a #{:b}
                :b #{:a}
                :c #{:a :b}} #{:a :b})
@@ -36,7 +36,7 @@
 
 (defn find-adjacent
   "returns a set of all functions adjacent to var
-
+ 
    (find-adjacent {:a #{:b :c} :b #{}}
                   :a)
    => #{:c :b}"
@@ -46,7 +46,7 @@
 
 (defn find-downstream
   "helper function for find-upstream and find-downstream
-
+ 
    (find-downstream {:a #{:b :c} :b #{} :c #{:d} :d #{}}
                     :a)
    => #{:c :b :d}"
@@ -64,7 +64,7 @@
 
 (defn find-namespace-vars
   "returns vars that are in a particular namespace
-
+ 
    (find-namespace-vars {:x/b #{}
                          :y/c #{}
                          :z/a #{}}
@@ -81,7 +81,7 @@
 
 (defn find-singletons
   "returns a set a isolated nodes
-
+ 
    (find-singletons {:a #{}
                      :b #{}
                      :c #{:a}})
@@ -98,7 +98,7 @@
 
 (defn find-dynamic
   "returns a set of all dynamic vars within a call graph
-
+ 
    (find-dynamic {:*hello* #{}})
    => #{:*hello*}"
   {:added "0.1"}
@@ -114,7 +114,7 @@
 
 (defn find-downstream-vars
   "returns a set of all dynamic vars within a call graph
-
+ 
    (find-downstream-vars {:a #{}
                           :b #{}
                           :c #{:a}}
@@ -128,7 +128,7 @@
 
 (defn call-pipe
   "a pipeline for manipulation of elements based upon specific options:
-
+ 
    (-> (bundle/bundle #\"example\")
        (call-pipe {:bundle {:reverse-calls     false
                             :hide-dynamic      false
@@ -137,7 +137,7 @@
                             :hide-vars         #{}
                             :select-namespaces #{}
                            :select-vars       #{}
-                            :collapse-vars     #{}}}))
+                            :collapse-vars     #{}}}))  
    => {:example.core/keywordize #{:example.core/hash-map? :example.core/long?},
        :example.core/long? #{},
        :example.core/hash-map? #{}}"
@@ -197,7 +197,7 @@
 
 (defn css-string
   "creates a css-string from a clojure one
-
+ 
    (css-string \"clojure.core/add\")
    => \"clojure_core__add\""
   {:added "0.1"}
@@ -208,7 +208,7 @@
 
 (defn elements-pipe
   "creates elements from a call graph for display as dom elements
-
+ 
    (-> (bundle/bundle #\"example\")
        (call-pipe viewer/+default-options+)
        (elements-pipe viewer/+default-options+))
