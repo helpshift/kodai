@@ -21,14 +21,14 @@
 
 
 
-
 (comment
   (require '[kodai.bundle :as bundle])
   (require '[kodai.core.pipeline :as pipe])
 
   (def b (bundle/bundle #"src/kodai"))
 
-  (def vw (viewer {:bundle bd} {}))
+  (def vw (viewer {:bundle b :title "hello"}
+                  {:bundle {:highlight-vars #{:kodai.bundle/bundle}}}))
   
   (./refresh)
   (pipe/find-namespace-vars (:forward bd) #{"kodai.core.viewer"})
