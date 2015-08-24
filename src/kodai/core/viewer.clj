@@ -15,36 +15,50 @@
             :hide-namespaces   #{}    
             :hide-singletons   false
             :hide-vars         #{}    
+            :highlight-vars    #{}
             :select-namespaces #{}    
-            :select-vars       #{}    
+            :select-vars       #{} 
             :collapse-vars     #{}}})
 
 (def +default-style+
-  [[:node {:size "8px"
-           :text-mode "hidden"
-           :fill-color "grey"}]
-   [:node:clicked {:text-mode "normal"
-                   :text-color "black"}]
-   [:node.selected {:stroke-width "5px"
-                    :stroke-color "black"
-                    :stroke-mode "plain"}]
-   [:node.focused_node {:fill-color "green"
-                        :stroke-width "2px"
-                        :stroke-color "black"
-                        :text-mode "normal"
-                        :stroke-mode "plain"
-                        :size "25px"
-                        :text-size "20px"
-                        :text-color "black"
-                        :z-index 100}]
-   [:node.adjacent_node {:fill-color "blue"
-                         :size "10px"
-                         :text-size "10px"
-                         :text-color "black"
-                         :z-index 100}]
+  [[:node                 {:size "8px"
+                           :text-mode "hidden"
+                           :fill-color "grey"}]
+   [:node:clicked         {:text-mode "normal"
+                           :text-color "black"}]
+   [:node.selected        {:stroke-width "5"
+                           :stroke-color "black"
+                           :stroke-mode "plain"}]
+   [:node.collapsed       {:fill-color "orange"}]
+   [:node.highlighted     {:text-mode "normal"}]
+   [:node.focused_node    {:fill-color "green"
+                           :text-mode "normal"
+                           :size "25px"
+                           :text-size "20px"
+                           :text-color "black"
+                           :z-index "100"}]
+   [:node.adjacent_node   {:fill-color "blue"
+                           :size "10px"
+                           :text-size "10px"
+                           :text-color "black"
+                           :z-index "100"}]
    [:node.downstream_node {:fill-color "red"}]
-   [:edge.adjacent_edge {}]
+   [:edge.adjacent_edge   {:fill-color "blue"
+                           :size "12px"}]
+   [:edge                 {:fill-color "grey"}]
    [:edge.downstream_edge {}]])
+
+(comment
+  (def vw (viewer {:bundle bd} {}))
+  (vw :style +default-style+)
+
+
+  (-> (vw :dom)
+      (add-class :nodes :kodai.bundle/->Bundle "focused_node")
+      (manipulate (-> (:bundle vw) :forward) pipe/find-adjacent add-class :nodes :kodai.bundle/->Bundle  "adjacent_node")
+      
+      )
+  )
 
 
 (object/extend-maplike
@@ -72,11 +86,15 @@
    KeyEvent/VK_CONTROL :control
    KeyEvent/VK_META    :meta
    KeyEvent/VK_ALT     :alt
+   KeyEvent/VK_C       :c
    KeyEvent/VK_D       :d
-   KeyEvent/VK_R       :r
    KeyEvent/VK_H       :h
    KeyEvent/VK_I       :i
-   KeyEvent/VK_S       :s})
+   KeyEvent/VK_L       :l
+   KeyEvent/VK_N       :n
+   KeyEvent/VK_R       :r
+   KeyEvent/VK_S       :s
+   KeyEvent/VK_V       :v})
 
 (defn create-listeners [interaction options]
   {:node
@@ -91,25 +109,51 @@
                        (= k :r)
                        (swap! options update-in [:bundle :reverse-calls] not)
                       
-                       (= k :i)
+                       (= k :s)
                        (swap! options update-in [:bundle :hide-singletons] not)
                        
                        (= k :d)
                        (swap! options update-in [:bundle :hide-dynamic] not)
 
-                       (= k :s)
+                       (= k :v)
                        (if-let [focused (-> interaction deref :focused)]
                          (swap! options update-in [:bundle :select-vars]
                                 #(if (% focused)
                                    (disj % focused)
+                                   (conj (empty %) focused))))
+
+                       (= k :c)
+                       (if-let [focused (-> interaction deref :focused)]
+                         (swap! options update-in [:bundle :collapse-vars]
+                                #(if (% focused)
+                                   (disj % focused)
                                    (conj % focused))))
 
+                       (= k :l)
+                       (if-let [focused (-> interaction deref :focused)]
+                         (swap! options update-in [:bundle :highlight-vars]
+                                #(if (% focused)
+                                   (disj % focused)
+                                   (conj % focused))))
+
+                       
                        (= k :h)
                        (if (get (:chords @interaction) :control)
                          (swap! options update-in [:bundle :hide-vars] (fnil empty #{}))
                          (when-let [focused (-> interaction deref :focused)]
                            (swap! interaction dissoc :focused)
                            (swap! options update-in [:bundle :hide-vars]
+                                  #(if (% focused)
+                                     (disj % focused)
+                                     (conj % focused)))))
+                       
+                       (= k :n)
+                       (if (get (:chords @interaction) :control)
+                         (swap! options update-in [:bundle :hide-namespaces] (fnil empty #{}))
+                         (when-let [focused (if-let [v (-> interaction deref :focused)]
+                                              (.getNamespace v))]
+                           (swap! interaction dissoc :focused)
+                           (swap! options update-in [:bundle :hide-namespaces]
                                   #(if (% focused)
                                      (disj % focused)
                                      (conj % focused)))))
@@ -134,35 +178,36 @@
                    (dissoc m :ui.class)
                    (assoc m :ui.class res))))))
 
+(defn manipulate
+  [dom calls select-fn change-fn type id tag]
+  (reduce (fn [dom id]
+            (change-fn dom type id tag))
+          dom
+          (select-fn calls id)))
+
 (defn add-focus [dom calls var]
   (let [dom (if var
               (-> dom
                   (add-class :nodes var "focused_node")
-                  ;;(manipulate-dom calls pipe/find-adjacent add-class var   "adjacent-node")
-                  ;;(manipulate-dom calls pipe/find-downstream add-class var "downstream-node")
+                  (manipulate calls pipe/find-adjacent add-class :nodes var  "adjacent_node")
+                  (manipulate calls pipe/find-downstream add-class :nodes var "downstream_node")
                   )
-              dom)
-        ;;_ (println "ADDED:" (get-in dom :))
-        ]
+              dom)]
     dom))
 
 (defn remove-focus [dom calls var]
   (let [dom (if var
               (-> dom
                   (remove-class :nodes var "focused_node")
-                  ;;(manipulate-dom calls pipe/find-adjacent remove-class var   "adjacent-node")
-                  ;;(manipulate-dom calls pipe/find-downstream remove-class var "downstream-node")
+                  (manipulate calls pipe/find-adjacent remove-class :nodes var "adjacent_node")
+                  (manipulate calls pipe/find-downstream remove-class :nodes var "downstream_node")
                   )
               dom)]
     dom))
 
 
 (comment
-  (defn manipulate-dom
-    [dom calls select-fn change-fn id tag]
-    (reduce (fn [dom id]
-              (change-fn dom id tag))
-            (select-fn calls id))))
+  )
 
 (defn viewer
   ([app]
@@ -202,6 +247,26 @@
 
   (def bd (bundle/bundle #"src/kodai"))
 
+  (def vw (viewer {:bundle bd} {}))
+  
+
+  (pipe/find-namespace-vars (:forward bd) #{"kodai.core.viewer"})
+  (pipe/find-downstream-vars (:forward bd) #{:kodai.core.pipeline/call-pipe})
+  
+  (:options vw)
+  
+
+
+
+  
+
+
+
+
+
+
+  
+  
   (count (pipe/call-pipe bd {:bundle {:hide-singletons true}}))
   (count (pipe/call-pipe bd {}))
   
@@ -236,7 +301,7 @@
   (count (-> bd :reverse keys))
 
   (clojure.set/difference #{1 2} #{1 3})
-  (def vw (viewer {:bundle bd} {:bundle {:hide-singletons true}}))
+  
   
   (vw :interaction)
   (vw :options)

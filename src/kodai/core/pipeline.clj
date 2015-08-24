@@ -49,18 +49,18 @@
 
    (find-downstream {:a #{:b :c} :b #{} :c #{:d} :d #{}}
                     :a)
-   => #{:c :b}"
+   => #{:c :b :d}"
   {:added "0.1"}
   ([calls var]
-   (find-downstream calls var #{}))
-  ([calls var out]
-   (if-not (get out var)
+   (find-downstream calls var #{} #{}))
+  ([calls var analysed out]
+   (if (get analysed var)
+     out
      (let [entries (get calls var)]
        (reduce (fn [out entry]
-                 (find-downstream calls entry out))
+                 (find-downstream calls entry (conj analysed var) out))
                (-> out (set/union entries))
-               entries))
-     out)))
+               entries)))))
 
 (defn find-namespace-vars
   "returns vars that are in a particular namespace
@@ -122,10 +122,9 @@
    => #{:a}"
   {:added "0.1"}
   [calls vars]
-  (reduce (fn [out v]
-            (find-downstream calls v out))
-          #{}
-          vars))
+  (->> vars
+       (map #(find-downstream calls %))
+       (apply set/union)))
 
 (defn call-pipe
   "a pipeline for manipulation of elements based upon specific options:
@@ -242,8 +241,9 @@
                 :ui.class [\"to_example_core\" \"from_example_core\"]}}}"
   {:added "0.1"}
   [calls opts]
-  (let [collapsed (-> opts :bundle :collapse-vars)
-        selected  (-> opts :bundle :select-vars)
+  (let [collapsed   (-> opts :bundle :collapse-vars)
+        selected    (-> opts :bundle :select-vars)
+        highlighted (-> opts :bundle :highlight-vars)
         v-fn  #(vec (filter identity %))
         nodes (->> (keys calls)
                    (map (juxt identity (fn [v] (let [ns (.getNamespace v)]
@@ -253,7 +253,8 @@
                                                   :ui.class
                                                   (v-fn [(str "ns_" (css-string ns))
                                                          (if (collapsed v) "collapsed")
-                                                         (if (selected v) "selected")])}))))
+                                                         (if (selected v) "selected")
+                                                         (if (highlighted v) "highlighted")])}))))
                    (into {}))
         edges (->> (seq calls)
                    (mapcat (fn [[from tos]]

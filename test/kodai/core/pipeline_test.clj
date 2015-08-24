@@ -32,7 +32,7 @@
 
   (find-downstream {:a #{:b :c} :b #{} :c #{:d} :d #{}}
                    :a)
-  => #{:c :b})
+  => #{:c :b :d})
 
 ^{:refer kodai.core.pipeline/find-namespace-vars :added "0.1"}
 (fact "returns vars that are in a particular namespace"
