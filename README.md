@@ -44,7 +44,7 @@ Use META-[MOUSE LEFT] to select a node:
 
 ![selecting a node](https://cloud.githubusercontent.com/assets/1455572/9433469/3c32d67e-4a51-11e5-9675-79eb7fa60e88.png)
 
-It can be seen that we have selected the top level node - `kodai.core/insight`. It has two adjacent nodes: `kodai.core.viewer/viewer` and `kodai.bundle/bundle`, we can META-[MOUSE LEFT] on the two of them, firstly the `kodai.core.viewer/viewer` node:
+It can be seen that we have selected the top level node - `kodai.core/insight`. It has two adjacent nodes: `kodai.core.viewer/viewer` and `kodai.bundle/bundle`, in blue and the corresponding downstream nodes in red. We can META-[MOUSE LEFT] on the two of them, firstly the `kodai.core.viewer/viewer` node:
 
 ![viewer node](https://cloud.githubusercontent.com/assets/1455572/9433476/5205f094-4a51-11e5-8cc1-e272bfbbe747.png)
 
@@ -86,19 +86,19 @@ A reversal of the call graph can be toggled by pressing `r`:
 
 ### hide nodes
 
-Nodes can be hidden by selecting and pressing `h`, all hidden nodes can be put back by pressing `CTRL-h`. Currently there is no way to selectively put nodes back in the ui, but this feature is planned for the future
+Nodes can be hidden by selecting and pressing `h`, all hidden nodes can be put back by pressing `CTRL-h`. Currently there is no way to selectively put nodes back in the ui, but this feature is planned for the future.
 
 ### hide namespaces
 
-Entire namespaces can be hidden by selecting a node and pressing `n`, all hidden namespaces can be put back by pressing `CTRL-n`. Currently there is no way to selectively put nodes back in the ui, but this feature is planned for the future
+Entire namespaces can be hidden by selecting a node and pressing `n`, all hidden namespaces can be put back by pressing `CTRL-n`. Currently there is no way to selectively put nodes back in the ui, but this feature is planned for the future.
 
 ### hide/show dynamic vars
 
-dynamic vars in a project (ear-muffed vars) can be toggled on and off with the `d` key
+dynamic vars in a project (ear-muffed vars) can be toggled on and off with the `d` key.
 
 ### hide/show singletons vars
 
-singletons on the screen can be toggled on and off with the `s` key
+singletons on the screen can be toggled on and off with the `s` key.
 
 ## License
 
